@@ -32,7 +32,7 @@ function Header({ isAuthenticated, dashboard }: Props) {
           alt={"Company logo"}
         />
       </Link>
-      <h1 className="text-2xl font-semibold">ZFI</h1>
+      <h1 className="text-2xl font-semibold">ZFI Schools</h1>
       <div className="lg:flex space-x-8 hidden">
         <NavLink
           className={({ isActive }) =>

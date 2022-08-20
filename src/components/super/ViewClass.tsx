@@ -58,7 +58,7 @@ function ViewClass({ className }: Props) {
   return (
     <div className="flex-col flex justify-center my-4 overflow-scroll scrollbar-hide">
       <h1 className="text-2xl font-bold">{className}</h1>
-      <table className="text-center mb-5 overflow-scroll min-w-[500px]">
+      <table className="text-center border border-gray-600 mb-5 overflow-scroll min-w-[500px]">
         <thead>
           <tr className="bg-blue-400 text-white">
             <th>Student Name</th>
@@ -68,12 +68,15 @@ function ViewClass({ className }: Props) {
           </tr>
         </thead>
         <tbody>
-          {students?.map((student) => (
-            <tr key={student._id}>
-              <td>{student.name}</td>
+          {students?.map((student, index) => (
+            <tr key={student._id} className="border border-gray-600">
+              <td className="flex px-2 space-x-5 py-2">
+                <span>{index + 1}</span>
+                <span>{student.name}</span>
+              </td>
               <td>{student.amountPaid}</td>
               <td>{student.tuition}</td>
-              <td className="flex justify-center">
+              <td className="flex justify-center items-center py-1">
                 <TrashIcon
                   className="text-center text-gray-700 w-6 h-6 cursor-pointer"
                   onClick={async () => {
