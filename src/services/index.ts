@@ -1,4 +1,4 @@
-import { get, getWithQuery, post, put } from "../utils";
+import { deleteVerb, get, getWithQuery, post, put } from "../utils";
 
 export const me = async () => {
   const res = await get("users/me");
@@ -37,6 +37,11 @@ export const getStudentsByClass = async (className: string) => {
 export const getStudentNamesByClass = async (className: string) => {
   const res = await get(`students/class?className=${className}`);
   return res.data.students;
+};
+
+export const deleteStudent = async (_id: string) => {
+  const res = await deleteVerb(`students/delete?_id=${_id}`);
+  return res.data;
 };
 
 export const getTerms = async () => {
