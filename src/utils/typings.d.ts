@@ -13,6 +13,13 @@ export interface UserState {
   updatedAt: Date;
 }
 
+export interface Student {
+  _id: string;
+  name: string;
+  amountPaid: number;
+  tuition: number;
+}
+
 export interface Expense {
   _id: string;
   details: string;
