@@ -2,11 +2,12 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   RefreshIcon,
+  TrashIcon,
 } from "@heroicons/react/solid";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { getPayments, getTerms, newTerm } from "../../services";
+import { deletePayment, getPayments, getTerms, newTerm } from "../../services";
 import { useAppSelector } from "../../store/hooks";
 import { LinkRoutes, Term } from "../../utils";
 
@@ -16,35 +17,29 @@ function ViewPayments() {
   const [count, setCount] = useState(0);
   const [sum, setSum] = useState(0);
   const [terms, setTerms] = useState<Term[]>([]);
-  const [term, setTerm] = useState<Term>();
+  const [term, setTerm] = useState<Term>(user!.currentTerm);
   const [pageNumber, setPageNumber] = useState(0);
   const navigate = useNavigate();
 
   const loadPayments = async (term: any, page: number) => {
     const n = toast.loading("Getting payments");
     try {
-      console.log(term);
       const { payments, count, sum } = await getPayments(term, page);
-      toast.success("Got payments", { id: n });
+      console.log(payments);
       setPayments(payments);
       setSum(sum);
       setCount(count);
-      const data = {
-        term,
-        payments,
-        sum,
-        count,
-      };
-      localStorage.setItem(
-        `${user?._id} payments` || "1 payments",
-        JSON.stringify(data)
-      );
+      setTerm(term);
+      console.log(term);
+      setTerms(await getTerms());
+
+      toast.success("Got payments", { id: n });
     } catch (err: any) {
       if (err === "Unauthorized") {
         navigate(LinkRoutes.LOGIN);
         window.location.reload();
       }
-      const { status, msg } = err;
+      const { msg } = err;
       toast.error("An error occurred: " + msg, { id: n });
       // if (status !== 200) setErrorMessage(msg);
       console.log(err);
@@ -52,32 +47,16 @@ function ViewPayments() {
   };
   useEffect(() => {
     (async () => {
-      try {
-        const data = localStorage.getItem(
-          `${user?._id} payments` || "1 payments"
-        );
-        if (data) {
-          const cache = JSON.parse(data);
-          setCount(cache.count);
-          setSum(cache.sum);
-          setPayments(cache.payments);
-          setTerm(cache.term);
-        }
-        setTerms(await getTerms());
-      } catch (err: any) {
-        if (err === "Unauthorized") {
-          navigate(LinkRoutes.LOGIN);
-          window.location.reload();
-        }
-        const { status, msg } = err;
-        // if (status !== 200) setErrorMessage(msg);
-        console.log(err);
+      {
+        /* {term ? `${term.session} ${term.term}` : "Select"} Term */
       }
+      await loadPayments(term, pageNumber);
     })();
+    // eslint-disable-next-line
   }, []);
 
   const decPage = async () => {
-    if (pageNumber == 0) return;
+    if (pageNumber === 0) return;
     setPageNumber((prev) => prev - 1);
     await loadPayments(term, pageNumber - 1);
   };
@@ -110,9 +89,9 @@ function ViewPayments() {
               await loadPayments(JSON.parse(e.target.value), pageNumber);
             }}
           >
-            <option value={JSON.stringify(term) || "Select Term"}>
+            {/* <option value={JSON.stringify(user?.currentTerm) || "Select Term"}>
               {term ? `${term.session} ${term.term}` : "Select"} Term
-            </option>
+            </option> */}
             {terms.map(
               (termItem: any) =>
                 JSON.stringify(termItem) !== JSON.stringify(term) && (
@@ -141,6 +120,7 @@ function ViewPayments() {
               <th className="py-4">Student Name</th>
               <th>Amount Paid</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -149,12 +129,20 @@ function ViewPayments() {
                 <td className="py-3">{payment.studentId.name}</td>
                 <td>{payment.amountPaid}</td>
                 <td>
-                  {new Date(payment.date).toDateString()}{" "}
-                  {new Date(payment.date).toLocaleTimeString()}
+                  {new Date(payment.createdAt).toDateString()}{" "}
+                  {new Date(payment.createdAt).toLocaleTimeString()}
+                </td>
+                <td>
+                  <TrashIcon
+                    className="text-center text-gray-700 w-6 h-6 cursor-pointer"
+                    onClick={async () => {
+                      await deletePayment(payment._id);
+                      await loadPayments(term, pageNumber);
+                    }}
+                  />
                 </td>
               </tr>
             ))}
-            <tr></tr>
           </tbody>
         </table>
       )}

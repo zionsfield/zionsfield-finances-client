@@ -2,22 +2,23 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   RefreshIcon,
+  TrashIcon,
 } from "@heroicons/react/solid";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { getExpenses, getTerms, newTerm } from "../../services";
+import { deleteExpense, getExpenses, getTerms, newTerm } from "../../services";
 import { useAppSelector } from "../../store/hooks";
 import { Expense, LinkRoutes, Term } from "../../utils";
 
 function ViewExpenses() {
+  const user = useAppSelector((state) => state.users.user);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [count, setCount] = useState(0);
   const [sum, setSum] = useState(0);
   const [terms, setTerms] = useState<Term[]>([]);
-  const [term, setTerm] = useState<Term>();
+  const [term, setTerm] = useState<Term>(user!.currentTerm);
   const [pageNumber, setPageNumber] = useState(0);
-  const user = useAppSelector((state) => state.users.user);
 
   const navigate = useNavigate();
   const loadExpenses = async (term: any, page: number) => {
@@ -25,26 +26,19 @@ function ViewExpenses() {
     try {
       console.log(term);
       const { expenses, count, sum } = await getExpenses(term, page);
-      toast.success("Got expenses", { id: n });
       setExpenses(expenses);
       setSum(sum);
       setCount(count);
-      const data = {
-        term,
-        expenses,
-        sum,
-        count,
-      };
-      localStorage.setItem(
-        `${user?._id} expenses` || "1 expenses",
-        JSON.stringify(data)
-      );
+      setTerm(term);
+      setTerms(await getTerms());
+
+      toast.success("Got expenses", { id: n });
     } catch (err: any) {
       if (err === "Unauthorized") {
         navigate(LinkRoutes.LOGIN);
         window.location.reload();
       }
-      const { status, msg } = err;
+      const { msg } = err;
       toast.error("An error occurred: " + msg, { id: n });
       // if (status !== 200) setErrorMessage(msg);
       console.log(err);
@@ -52,28 +46,9 @@ function ViewExpenses() {
   };
   useEffect(() => {
     (async () => {
-      try {
-        const data = localStorage.getItem(
-          `${user?._id} expenses` || "1 expenses"
-        );
-        if (data) {
-          const cache = JSON.parse(data);
-          setCount(cache.count);
-          setSum(cache.sum);
-          setExpenses(cache.expenses);
-          setTerm(cache.term);
-        }
-        setTerms(await getTerms());
-      } catch (err: any) {
-        if (err === "Unauthorized") {
-          navigate(LinkRoutes.LOGIN);
-          window.location.reload();
-        }
-        const { status, msg } = err;
-        // if (status !== 200) setErrorMessage(msg);
-        console.log(err);
-      }
+      await loadExpenses(term, pageNumber);
     })();
+    // eslint-disable-next-line
   }, []);
 
   const decPage = async () => {
@@ -110,9 +85,9 @@ function ViewExpenses() {
               await loadExpenses(JSON.parse(e.target.value), pageNumber);
             }}
           >
-            <option value={JSON.stringify(term) || "Select Term"}>
+            {/* <option value={JSON.stringify(term) || "Select Term"}>
               {term ? `${term.session} ${term.term}` : "Select"} Term
-            </option>
+            </option> */}
             {terms.map(
               (termItem: any) =>
                 JSON.stringify(termItem) !== JSON.stringify(term) && (
@@ -141,6 +116,7 @@ function ViewExpenses() {
               <th className="py-4">Expense Details</th>
               <th>Amount Paid</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -152,9 +128,17 @@ function ViewExpenses() {
                   {new Date(expense.date).toDateString()}{" "}
                   {new Date(expense.date).toLocaleTimeString()}
                 </td>
+                <td>
+                  <TrashIcon
+                    className="text-center text-gray-700 w-6 h-6 cursor-pointer"
+                    onClick={async () => {
+                      await deleteExpense(expense._id);
+                      await loadExpenses(term, pageNumber);
+                    }}
+                  />
+                </td>
               </tr>
             ))}
-            <tr></tr>
           </tbody>
         </table>
       )}

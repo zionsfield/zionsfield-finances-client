@@ -32,8 +32,18 @@ export const addPayment = async (data: any) => {
   return res.data.payment;
 };
 
+export const deletePayment = async (_id: string) => {
+  const res = await deleteVerb(`payments/delete?_id=${_id}`);
+  return res.data.payment;
+};
+
 export const addExpense = async (data: any) => {
   const res = await post("expenses/add", data);
+  return res.data.expense;
+};
+
+export const deleteExpense = async (_id: string) => {
+  const res = await deleteVerb(`expenses/delete?_id=${_id}`);
   return res.data.expense;
 };
 
