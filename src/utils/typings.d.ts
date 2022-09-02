@@ -20,12 +20,31 @@ export interface Student {
   tuition: number;
 }
 
+export interface Payment {
+  _id: string;
+  amountPaid: number;
+  currentTerm: Term;
+  studentId: Student;
+  classId: string;
+  createdAt: Date;
+}
+
 export interface Expense {
   _id: string;
   details: string;
   amountPaid: number;
   date: Date;
   currentTerm: Term;
+  createdAt: Date;
+}
+
+export interface EditPayment {
+  amountPaid: number;
+}
+
+export interface EditExpense {
+  details: string;
+  amountPaid: number;
 }
 
 export type Page =

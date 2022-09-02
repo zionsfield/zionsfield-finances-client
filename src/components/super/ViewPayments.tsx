@@ -1,24 +1,34 @@
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  CheckIcon,
+  PencilIcon,
   RefreshIcon,
   TrashIcon,
 } from "@heroicons/react/solid";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { deletePayment, getPayments, getTerms, newTerm } from "../../services";
+import {
+  deletePayment,
+  editPayment,
+  getPayments,
+  getTerms,
+  newTerm,
+} from "../../services";
 import { useAppSelector } from "../../store/hooks";
-import { LinkRoutes, Term } from "../../utils";
+import { LinkRoutes, Payment, Term } from "../../utils";
 
 function ViewPayments() {
   const user = useAppSelector((state) => state.users.user);
-  const [payments, setPayments] = useState<any[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [count, setCount] = useState(0);
   const [sum, setSum] = useState(0);
   const [terms, setTerms] = useState<Term[]>([]);
   const [term, setTerm] = useState<Term>(user!.currentTerm);
   const [pageNumber, setPageNumber] = useState(0);
+  const [editable, setEditable] = useState("");
+  const [editing, setEditing] = useState({ amountPaid: 0 });
   const navigate = useNavigate();
 
   const loadPayments = async (term: any, page: number) => {
@@ -127,12 +137,48 @@ function ViewPayments() {
             {payments?.map((payment) => (
               <tr key={payment._id}>
                 <td className="py-3">{payment.studentId.name}</td>
-                <td>{payment.amountPaid}</td>
+                <td>
+                  {editable === payment._id ? (
+                    <input
+                      className="bg-white"
+                      type="number"
+                      autoFocus
+                      defaultValue={payment.amountPaid}
+                      onChange={(e) =>
+                        setEditing({ amountPaid: parseInt(e.target.value) })
+                      }
+                    />
+                  ) : (
+                    <span>{payment.amountPaid}</span>
+                  )}
+                </td>
                 <td>
                   {new Date(payment.createdAt).toDateString()}{" "}
                   {new Date(payment.createdAt).toLocaleTimeString()}
                 </td>
                 <td>
+                  {editable === payment._id ? (
+                    <CheckIcon
+                      className="text-center text-blue-500 w-6 h-6 cursor-pointer"
+                      onClick={async () => {
+                        const updatedPayment = {
+                          amountPaid:
+                            editing.amountPaid > 0
+                              ? editing.amountPaid
+                              : payment.amountPaid,
+                        };
+                        setEditable("");
+                        setEditing({ amountPaid: 0 });
+                        editPayment(payment._id, updatedPayment);
+                        loadPayments(term, pageNumber);
+                      }}
+                    />
+                  ) : (
+                    <PencilIcon
+                      onClick={() => setEditable(payment._id)}
+                      className="text-center text-gray-700 w-6 h-6 cursor-pointer"
+                    />
+                  )}
                   <TrashIcon
                     className="text-center text-gray-700 w-6 h-6 cursor-pointer"
                     onClick={async () => {

@@ -1,4 +1,13 @@
-import { deleteVerb, get, getWithQuery, post, put, Student } from "../utils";
+import {
+  deleteVerb,
+  EditExpense,
+  EditPayment,
+  get,
+  getWithQuery,
+  post,
+  put,
+  Student,
+} from "../utils";
 
 export const me = async () => {
   const res = await get("users/me");
@@ -24,12 +33,17 @@ export const editStudent = async (
   updatedStudent: Student
 ) => {
   const res = await put(`students/edit?studentId=${studentId}`, updatedStudent);
-  // return res.data;
+  return res.data;
 };
 
 export const addPayment = async (data: any) => {
   const res = await post("payments/add", data);
   return res.data.payment;
+};
+
+export const editPayment = async (_id: string, data: EditPayment) => {
+  const res = await put(`payments/edit?_id=${_id}`, data);
+  return res.data;
 };
 
 export const deletePayment = async (_id: string) => {
@@ -40,6 +54,11 @@ export const deletePayment = async (_id: string) => {
 export const addExpense = async (data: any) => {
   const res = await post("expenses/add", data);
   return res.data.expense;
+};
+
+export const editExpense = async (_id: string, data: EditExpense) => {
+  const res = await put(`expenses/edit?_id=${_id}`, data);
+  return res.data;
 };
 
 export const deleteExpense = async (_id: string) => {

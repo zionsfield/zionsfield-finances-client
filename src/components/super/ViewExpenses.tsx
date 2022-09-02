@@ -1,13 +1,21 @@
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  CheckIcon,
+  PencilIcon,
   RefreshIcon,
   TrashIcon,
 } from "@heroicons/react/solid";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { deleteExpense, getExpenses, getTerms, newTerm } from "../../services";
+import {
+  deleteExpense,
+  editExpense,
+  getExpenses,
+  getTerms,
+  newTerm,
+} from "../../services";
 import { useAppSelector } from "../../store/hooks";
 import { Expense, LinkRoutes, Term } from "../../utils";
 
@@ -19,6 +27,8 @@ function ViewExpenses() {
   const [terms, setTerms] = useState<Term[]>([]);
   const [term, setTerm] = useState<Term>(user!.currentTerm);
   const [pageNumber, setPageNumber] = useState(0);
+  const [editable, setEditable] = useState("");
+  const [editing, setEditing] = useState({ amountPaid: 0, details: "" });
 
   const navigate = useNavigate();
   const loadExpenses = async (term: any, page: number) => {
@@ -122,13 +132,69 @@ function ViewExpenses() {
           <tbody>
             {expenses?.map((expense) => (
               <tr key={expense._id}>
-                <td className="py-3">{expense.details}</td>
-                <td>{expense.amountPaid}</td>
-                <td>
-                  {new Date(expense.date).toDateString()}{" "}
-                  {new Date(expense.date).toLocaleTimeString()}
+                <td className="py-3">
+                  {editable === expense._id ? (
+                    <input
+                      type="text"
+                      className="bg-white"
+                      autoFocus
+                      defaultValue={expense.details}
+                      onChange={(e) =>
+                        setEditing((prev) => ({
+                          ...prev,
+                          details: e.target.value,
+                        }))
+                      }
+                    />
+                  ) : (
+                    <span>{expense.details}</span>
+                  )}
                 </td>
                 <td>
+                  {editable === expense._id ? (
+                    <input
+                      type="number"
+                      className="bg-white"
+                      defaultValue={expense.amountPaid}
+                      onChange={(e) =>
+                        setEditing((prev) => ({
+                          ...prev,
+                          amountPaid: parseInt(e.target.value),
+                        }))
+                      }
+                    />
+                  ) : (
+                    <span>{expense.amountPaid}</span>
+                  )}
+                </td>
+                <td>
+                  {new Date(expense.createdAt).toDateString()}{" "}
+                  {new Date(expense.createdAt).toLocaleTimeString()}
+                </td>
+                <td>
+                  {editable === expense._id ? (
+                    <CheckIcon
+                      className="text-center text-blue-500 w-6 h-6 cursor-pointer"
+                      onClick={async () => {
+                        const updatedExpense = {
+                          details: editing.details || expense.details,
+                          amountPaid:
+                            editing.amountPaid > 0
+                              ? editing.amountPaid
+                              : expense.amountPaid,
+                        };
+                        setEditable("");
+                        setEditing({ amountPaid: 0, details: "" });
+                        editExpense(expense._id, updatedExpense);
+                        loadExpenses(term, pageNumber);
+                      }}
+                    />
+                  ) : (
+                    <PencilIcon
+                      onClick={() => setEditable(expense._id)}
+                      className="text-center text-gray-700 w-6 h-6 cursor-pointer"
+                    />
+                  )}
                   <TrashIcon
                     className="text-center text-gray-700 w-6 h-6 cursor-pointer"
                     onClick={async () => {
